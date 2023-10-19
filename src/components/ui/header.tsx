@@ -6,16 +6,24 @@ import {
   HomeIcon,
   ListOrderedIcon,
   LogInIcon,
+  LogOutIcon,
   MenuIcon,
   PercentIcon,
   ShoppingCartIcon,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from './sheet'
-import { signIn } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
+import { Avatar, AvatarFallback, AvatarImage } from './avatar'
+import { Separator } from './separator'
 
 export default function Header() {
+  const { status, data } = useSession()
+
   const handleLoginClick = async () => {
     await signIn()
+  }
+  const handleLogoutClick = async () => {
+    await signOut()
   }
 
   return (
@@ -30,6 +38,30 @@ export default function Header() {
           <SheetHeader className="text-left text-lg font-semibold">
             Menu
           </SheetHeader>
+          {status === 'authenticated' && data?.user && (
+            <div className="flex flex-col ">
+              <div className="flex items-center gap-3 py-4">
+                <Avatar>
+                  <AvatarFallback>
+                    {data.user.name?.[0].toUpperCase()}
+                  </AvatarFallback>
+                  {data.user.image && <AvatarImage src={data.user.image} />}
+                </Avatar>
+                <p className="font-semibold">{data.user.name}</p>
+                {status === 'authenticated' && (
+                  <Button
+                    onClick={handleLogoutClick}
+                    variant={'ghost'}
+                    className="ml-auto justify-start gap-2"
+                  >
+                    <LogOutIcon />
+                    Logout
+                  </Button>
+                )}
+              </div>
+              <Separator className="mb-3" />
+            </div>
+          )}
           <div className="mt-2 flex flex-col gap-3">
             <Button variant={'outline'} className="w-full justify-start gap-2">
               <HomeIcon />
@@ -43,14 +75,16 @@ export default function Header() {
               <ListOrderedIcon />
               Catalago
             </Button>
-            <Button
-              onClick={handleLoginClick}
-              variant={'outline'}
-              className="w-full justify-start gap-2"
-            >
-              <LogInIcon />
-              Login
-            </Button>
+            {status === 'unauthenticated' && (
+              <Button
+                onClick={handleLoginClick}
+                variant={'outline'}
+                className="w-full justify-start gap-2"
+              >
+                <LogInIcon />
+                Login
+              </Button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
